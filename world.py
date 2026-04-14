@@ -1,6 +1,9 @@
 import numpy as np
 import itertools
+
 from enum import Enum, auto
+from agent import Agent
+from brain import BrainConfig
 
 class TileType(Enum):
     VOID = auto()
@@ -8,13 +11,14 @@ class TileType(Enum):
     AGENT = auto()
 
 class Tile:
-    id_generator = itertools.count(1)
+    id_generator = itertools.count(start=0, step=1)
 
-    def __init__(self, tile_type: TileType):
+    def __init__(self, tile_type: TileType, agent: Agent = None):
         self.type = tile_type
+        self.agent = agent
         
         if self.type == TileType.VOID:
-            self.id = 0
+            self.id = -1
         else:
             self.id = next(self.id_generator)
 
@@ -28,6 +32,7 @@ class World:
         self.num_agents = num_agents
         self.num_food = num_food
         self.rng = np.random.default_rng(self.seed)
+        self.default_brain_cfg = BrainConfig()
         
         self.init_map()
 
@@ -38,7 +43,7 @@ class World:
             [[Tile(TileType.VOID) for _ in range(cols)] for _ in range(rows)], 
             dtype=object
         )
-        
+
         self.spawn_tiles(self.num_agents, TileType.AGENT)
         self.spawn_tiles(self.num_food, TileType.FOOD)
 
@@ -53,7 +58,16 @@ class World:
         coords = empty_indices[chosen_indices]
 
         for y, x in coords:
-            self.map[y, x] = Tile(tile_type)
+            tile = Tile(tile_type)
+            
+            if tile_type == TileType.AGENT:
+                tile.agent = Agent(
+                    id=tile.id, 
+                    spawn_loc=(y, x), 
+                    brain_cfg=self.default_brain_cfg
+                )
+                
+            self.map[y, x] = tile
 
 if __name__ == "__main__":
     world = World(map_size=(9, 9), seed=42, num_agents=10, num_food=20)

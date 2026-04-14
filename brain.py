@@ -1,15 +1,26 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from dataclasses import dataclass
+
+import config
+
+@dataclass
+class BrainConfig:
+    input_dim: int = config.BRAIN_INPUT_DIM
+    hidden_dim: int = config.BRAIN_HIDDEN_DIM
+    output_dim: int = config.BRAIN_OUTPUT_DIM
+    lr: float = config.BRAIN_LR
 
 class Brain(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim, lr=0.01):
+    def __init__(self, brain_cfg: BrainConfig):
         super(Brain, self).__init__()
-        self.fc1 = nn.Linear(input_dim, hidden_dim)
+        self.cfg = brain_cfg
+        self.fc1 = nn.Linear(brain_cfg.input_dim, brain_cfg.hidden_dim)
         self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(hidden_dim, output_dim)
+        self.fc2 = nn.Linear(brain_cfg.hidden_dim, brain_cfg.output_dim)
         
-        self.optimizer = optim.Adam(self.parameters(), lr=lr)
+        self.optimizer = optim.Adam(self.parameters(), lr=brain_cfg.lr)
         self.criterion = nn.MSELoss()
 
     def forward(self, x):
