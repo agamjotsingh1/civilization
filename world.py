@@ -1,18 +1,11 @@
 import numpy as np
-import itertools
 
-from enum import Enum, auto
 from agent import Agent
 from brain import BrainConfig
-
-class TileType(Enum):
-    VOID = auto()
-    FOOD = auto()
-    AGENT = auto()
+from enumdefs import TileType
+from utils import get_id
 
 class Tile:
-    id_generator = itertools.count(start=0, step=1)
-
     def __init__(self, tile_type: TileType, agent: Agent = None):
         self.type = tile_type
         self.agent = agent
@@ -20,7 +13,7 @@ class Tile:
         if self.type == TileType.VOID:
             self.id = -1
         else:
-            self.id = next(self.id_generator)
+            self.id = get_id()
 
     def __repr__(self):
         return f"{self.type.name}_{self.id}"
@@ -68,6 +61,20 @@ class World:
                 )
                 
             self.map[y, x] = tile
+
+    def replenish_food(self, amount: int):
+        is_void = np.vectorize(lambda tile: tile.type == TileType.VOID)
+        empty_indices = np.argwhere(is_void(self.map))
+        
+        actual_amount = min(amount, len(empty_indices))
+        if actual_amount == 0:
+            return
+
+        chosen_indices = self.rng.choice(len(empty_indices), size=actual_amount, replace=False)
+        coords = empty_indices[chosen_indices]
+
+        for y, x in coords:
+            self.map[y, x] = Tile(TileType.FOOD)
 
 if __name__ == "__main__":
     world = World(map_size=(9, 9), seed=42, num_agents=10, num_food=20)
