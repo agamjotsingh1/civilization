@@ -54,7 +54,7 @@ class Agent:
             partner_loc = self.check_adjacent_type(map, TileType.AGENT)
             spawn_loc = self.check_adjacent_type(map, TileType.VOID)
 
-            if partner_loc and spawn_loc and self.satiety >= 6:
+            if partner_loc and spawn_loc and self.satiety >= 4:
                 cy, cx = spawn_loc
                 py, px = partner_loc
                 partner_agent = map[py, px].agent
@@ -77,9 +77,9 @@ class Agent:
                 target_tile.type = TileType.AGENT
                 target_tile.agent = child
                 
-                self.satiety -= 5
-                partner_agent.satiety -= 5
-                child.satiety = 10
+                self.satiety -= 3
+                partner_agent.satiety -= 3
+                child.satiety = 6
 
                 reward = 20.0
             else:
@@ -95,7 +95,7 @@ class Agent:
                 map[ty, tx].agent = None
                 
                 self.satiety += target_agent.satiety
-                reward = 15.0
+                reward = 5.0
             else:
                 reward = -2.0
 
@@ -104,8 +104,10 @@ class Agent:
 
             if not success:
                 reward = -2.0
+            else:
+                reward = 2.0
         
-            self.satiety -= 0.2
+            self.satiety -= 0.1
 
         if self.satiety <= 0:
             y, x = self.loc
@@ -123,7 +125,7 @@ class Agent:
         targets[action_idx] = reward + (gamma * np.max(next_actions))
             
         loss, _ = self.brain.train_step(state, targets)
-        return loss
+        return loss, action
 
     def check_adjacent_type(self, map: np.typing.NDarray[object], target_type: TileType):
         y, x = self.loc
